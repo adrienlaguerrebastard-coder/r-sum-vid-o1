@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TikTok Foot Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Segoe UI', system-ui, sans-serif; }
+        .glass { backdrop-filter: blur(12px); background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.15); }
+        .pill-active { background: linear-gradient(90deg, #ec4899, #f43f5e); border-color: rgba(255,255,255,0.5); }
+    </style>
+</head>
+<body class="min-h-screen text-white bg-gradient-to-br from-slate-900 via-purple-900 to-rose-900">
+<div class="max-w-2xl mx-auto px-4 py-10">
+
+    <header class="text-center mb-10">
+        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight">⚽ TikTok Foot Generator</h1>
+        <p class="mt-3 text-pink-100/80">Détection automatique des temps forts — fond flouté vertical prêt pour TikTok.</p>
+    </header>
+
+    <section class="glass rounded-2xl p-6 shadow-2xl">
+        <form id="form" class="space-y-5">
+
+            <div>
+                <label class="block text-sm font-semibold mb-2" for="url">Lien YouTube</label>
+                <input id="url" type="url" required
+                       placeholder="https://www.youtube.com/watch?v=..."
+                       class="w-full rounded-lg bg-black/30 border border-white/20 px-4 py-3 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">Mode</label>
+                <div class="grid grid-cols-2 gap-2" id="mode-group">
+                    <button type="button" data-value="auto"
+                            class="mode-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        🤖 Auto-highlights
+                    </button>
+                    <button type="button" data-value="manual"
+                            class="mode-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        ✂️ Intervalle manuel
+                    </button>
+                </div>
+                <input type="hidden" id="mode" value="auto" />
+            </div>
+
+            <div id="auto-fields">
+                <label class="block text-sm font-semibold mb-2">Durée cible</label>
+                <div class="grid grid-cols-3 gap-2" id="target-group">
+                    <button type="button" data-value="30" class="target-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold">30 s</button>
+                    <button type="button" data-value="60" class="target-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold">60 s</button>
+                    <button type="button" data-value="90" class="target-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold">1 min 30</button>
+                    <button type="button" data-value="120" class="target-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold">2 min</button>
+                    <button type="button" data-value="180" class="target-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold">3 min</button>
+                    <button type="button" data-value="240" class="target-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold">4 min</button>
+                </div>
+                <input type="hidden" id="target_duration" value="60" />
+                <p class="mt-2 text-xs text-white/50">Whisper transcrit le commentaire et repère les buts (fenêtre fixe ~14 s/clip, replays ignorés). L'algorithme balaye tout le match — plus la durée cible est longue, plus de moments forts sont inclus.</p>
+            </div>
+
+            <div id="manual-fields" class="hidden grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-semibold mb-2" for="start">Début (sec)</label>
+                    <input id="start" type="number" min="0" value="0"
+                           class="w-full rounded-lg bg-black/30 border border-white/20 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold mb-2" for="duration">Durée (sec)</label>
+                    <input id="duration" type="number" min="1" placeholder="vide = tout"
+                           class="w-full rounded-lg bg-black/30 border border-white/20 px-4 py-3 placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-pink-400" />
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-sm font-semibold mb-2">Style vertical</label>
+                <div class="grid grid-cols-3 gap-2" id="format-group">
+                    <button type="button" data-value="blur"
+                            class="format-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        Fond flouté
+                    </button>
+                    <button type="button" data-value="crop"
+                            class="format-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        Recadré
+                    </button>
+                    <button type="button" data-value="pad"
+                            class="format-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        Bandes noires
+                    </button>
+                </div>
+                <input type="hidden" id="format" value="blur" />
+            </div>
+
+            <label class="flex items-start gap-3 cursor-pointer rounded-lg bg-black/20 border border-white/15 px-4 py-3 hover:bg-black/30 transition">
+                <input id="blur_logo" type="checkbox" checked
+                       class="w-5 h-5 mt-0.5 accent-pink-500 shrink-0" />
+                <span class="text-sm">
+                    <span class="font-semibold">Flouter le logo de la chaîne</span>
+                    <span class="block text-xs text-white/60 mt-0.5">Floute la zone en haut à droite (TF1, beIN, RMC…) — recommandé pour passer sous le radar TikTok.</span>
+                </span>
+            </label>
+
+            <button type="submit" id="submit-btn"
+                    class="w-full rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 py-3 font-bold text-lg shadow-lg hover:from-pink-600 hover:to-rose-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+                🚀 Générer la vidéo TikTok
+            </button>
+        </form>
+
+        <div id="progress" class="hidden mt-6">
+            <p id="status-text" class="mb-2 text-sm">Initialisation...</p>
+            <div class="w-full bg-black/40 rounded-full h-3 overflow-hidden">
+                <div id="progress-bar" class="h-3 bg-gradient-to-r from-pink-400 to-rose-400 transition-all duration-300" style="width:0%"></div>
+            </div>
+            <p id="detection-info" class="mt-2 text-xs text-pink-100/70"></p>
+        </div>
+
+        <div id="result" class="hidden mt-6 space-y-4">
+            <div class="text-center">
+                <p class="text-green-300 font-semibold">✅ Vidéo prête !</p>
+                <p id="result-info" class="text-xs text-white/60 mt-1"></p>
+            </div>
+            <video id="preview" controls class="w-full max-h-[60vh] rounded-lg bg-black"></video>
+            <a id="download-link" download
+               class="block text-center rounded-xl bg-green-500 hover:bg-green-600 py-3 font-bold transition">
+                ⬇️ Télécharger la vidéo
+            </a>
+            <button id="reset-btn" type="button"
+                    class="block w-full text-center rounded-xl bg-white/10 hover:bg-white/20 py-2 text-sm">
+                ↺ Nouvelle vidéo
+            </button>
+        </div>
+
+        <div id="error" class="hidden mt-6 p-4 rounded-lg bg-red-500/30 border border-red-400">
+            <p class="font-semibold">❌ Erreur</p>
+            <p id="error-text" class="text-sm mt-1 break-words"></p>
+        </div>
+    </section>
+
+    <footer class="mt-8 text-center text-xs text-white/50">
+        Astuce : la détection auto marche mieux sur des résumés courts (5–15 min) avec commentaire audio.
+    </footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const form = $('form');
+const submitBtn = $('submit-btn');
+const progressDiv = $('progress');
+const progressBar = $('progress-bar');
+const statusText = $('status-text');
+const detectionInfo = $('detection-info');
+const resultDiv = $('result');
+const resultInfo = $('result-info');
+const errorDiv = $('error');
+const errorText = $('error-text');
+const downloadLink = $('download-link');
+const preview = $('preview');
+const autoFields = $('auto-fields');
+const manualFields = $('manual-fields');
+
+const STATUS = {
+    pending: 'En attente…',
+    downloading: 'Téléchargement depuis YouTube…',
+    transcribing: '🎙️ Transcription du commentaire (détection but/action)…',
+    analyzing: '🎧 Repli sur analyse audio…',
+    processing: 'Montage et conversion TikTok…',
+    done: 'Terminé !',
+    error: 'Erreur',
+};
+
+function setupPillGroup(groupId, hiddenId, defaultValue, onChange) {
+    const group = $(groupId);
+    const hidden = $(hiddenId);
+    function set(val) {
+        hidden.value = val;
+        group.querySelectorAll('button').forEach(b => {
+            const active = b.dataset.value === val;
+            b.classList.toggle('pill-active', active);
+            b.classList.toggle('bg-black/30', !active);
+        });
+        if (onChange) onChange(val);
+    }
+    group.addEventListener('click', e => {
+        const btn = e.target.closest('button[data-value]');
+        if (btn) set(btn.dataset.value);
+    });
+    set(defaultValue);
+}
+
+setupPillGroup('mode-group', 'mode', 'auto', (val) => {
+    autoFields.classList.toggle('hidden', val !== 'auto');
+    manualFields.classList.toggle('hidden', val !== 'manual');
+    if (val === 'manual') {
+        manualFields.classList.remove('hidden');
+        manualFields.classList.add('grid');
+    } else {
+        manualFields.classList.add('hidden');
+        manualFields.classList.remove('grid');
+    }
+});
+setupPillGroup('target-group', 'target_duration', '60');
+setupPillGroup('format-group', 'format', 'blur');
+
+function showError(msg) {
+    progressDiv.classList.add('hidden');
+    errorDiv.classList.remove('hidden');
+    errorText.textContent = msg;
+    submitBtn.disabled = false;
+}
+
+function reset() {
+    resultDiv.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+    progressDiv.classList.add('hidden');
+    detectionInfo.textContent = '';
+    preview.removeAttribute('src');
+    submitBtn.disabled = false;
+}
+
+$('reset-btn').addEventListener('click', reset);
+
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    reset();
+    progressDiv.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    statusText.textContent = STATUS.pending;
+    submitBtn.disabled = true;
+
+    const payload = {
+        url: $('url').value.trim(),
+        mode: $('mode').value,
+        format: $('format').value,
+        target_duration: $('target_duration').value,
+        start: $('start').value || 0,
+        duration: $('duration').value || null,
+        blur_logo: $('blur_logo').checked,
+    };
+
+    try {
+        const res = await fetch('/process', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok) { showError(data.error || 'Erreur serveur'); return; }
+        pollStatus(data.job_id);
+    } catch (err) {
+        showError(err.message);
+    }
+});
+
+function pollStatus(jobId) {
+    const timer = setInterval(async () => {
+        try {
+            const res = await fetch(`/status/${jobId}`);
+            const job = await res.json();
+            statusText.textContent = STATUS[job.status] || job.status;
+            progressBar.style.width = `${job.progress || 0}%`;
+
+            if (job.detection) {
+                detectionInfo.textContent = `🎯 ${job.detection} • durée totale ${job.total_clip_duration}s`;
+            }
+
+            if (job.status === 'done') {
+                clearInterval(timer);
+                progressDiv.classList.add('hidden');
+                resultDiv.classList.remove('hidden');
+                downloadLink.href = `/download/${jobId}`;
+                preview.src = `/preview/${jobId}`;
+                if (job.clips && job.clips.length) {
+                    const ranges = job.clips.map(c => `${c.start}s→${c.end}s`).join(' · ');
+                    resultInfo.textContent = `${job.clips.length} clip(s) : ${ranges}`;
+                } else {
+                    resultInfo.textContent = '';
+                }
+                submitBtn.disabled = false;
+            } else if (job.status === 'error') {
+                clearInterval(timer);
+                showError(job.error || 'Erreur inconnue');
+            }
+        } catch (err) {
+            clearInterval(timer);
+            showError(err.message);
+        }
+    }, 1500);
+}
+</script>
+</body>
+</html>
