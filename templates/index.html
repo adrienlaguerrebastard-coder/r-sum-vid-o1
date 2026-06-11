@@ -30,6 +30,42 @@
             </div>
 
             <div>
+                <label class="block text-sm font-semibold mb-2">Sport</label>
+                <div class="grid grid-cols-2 gap-2" id="sport-group">
+                    <button type="button" data-value="foot"
+                            class="sport-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        ⚽ Foot
+                    </button>
+                    <button type="button" data-value="nba"
+                            class="sport-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        🏀 NBA / Basket
+                    </button>
+                </div>
+                <input type="hidden" id="sport" value="foot" />
+                <p id="nba-note" class="hidden mt-2 text-xs text-pink-100/70">🏀 Mode basket : on garde les meilleurs temps forts (dunks, 3pts, contres, clutch) répartis sur le match. Pas de score OCR (on marque sans cesse) ; commentaire anglais géré.</p>
+            </div>
+
+            <div id="channel-wrap">
+                <label class="block text-sm font-semibold mb-2">Chaîne (pour lire le score)</label>
+                <div class="grid grid-cols-3 gap-2" id="channel-group">
+                    <button type="button" data-value="auto"
+                            class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        ✨ Auto
+                    </button>
+                    <button type="button" data-value="tf1"
+                            class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        TF1
+                    </button>
+                    <button type="button" data-value="lequipe"
+                            class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        L'Équipe
+                    </button>
+                </div>
+                <input type="hidden" id="channel" value="auto" />
+                <p class="mt-2 text-xs text-white/50">✨ <b>Auto</b> détecte tout seul la position du bandeau (n'importe quel diffuseur). Choisis TF1/L'Équipe pour aller plus vite si tu connais la chaîne.</p>
+            </div>
+
+            <div>
                 <label class="block text-sm font-semibold mb-2">Mode</label>
                 <div class="grid grid-cols-2 gap-2" id="mode-group">
                     <button type="button" data-value="auto"
@@ -99,6 +135,60 @@
                 </span>
             </label>
 
+            <label id="cut-slowmo-wrap" class="flex items-start gap-3 cursor-pointer rounded-lg bg-black/20 border border-white/15 px-4 py-3 hover:bg-black/30 transition">
+                <input id="cut_slowmo" type="checkbox" checked
+                       class="w-5 h-5 mt-0.5 accent-pink-500 shrink-0" />
+                <span class="text-sm">
+                    <span class="font-semibold">Réduire les ralentis (auto)</span>
+                    <span class="block text-xs text-white/60 mt-0.5">Analyse le mouvement de l'image : garde un seul replay court (~4 s) par but et coupe les ralentis en trop + les plans figés. Plus d'action en direct, le résumé couvre tout le match.</span>
+                </span>
+            </label>
+
+            <label class="flex items-start gap-3 cursor-pointer rounded-lg bg-black/20 border border-white/15 px-4 py-3 hover:bg-black/30 transition">
+                <input id="scoreboard" type="checkbox"
+                       class="w-5 h-5 mt-0.5 accent-pink-500 shrink-0" />
+                <span class="text-sm">
+                    <span class="font-semibold">Garder le score (en haut au centre)</span>
+                    <span class="block text-xs text-white/60 mt-0.5">Récupère le tableau des scores (en haut à gauche de la source) et le recolle en haut-centre du format vertical, visible en permanence. La position dépend du diffuseur — réglable si besoin.</span>
+                </span>
+            </label>
+
+            <p id="crop-note" class="hidden text-xs text-pink-100/70 px-1">🎥 Mode recadré : plein cadre 9:16 centré (la caméra TV suit déjà le ballon). Idéal TikTok. Pour du foot très large, « Fond flouté » garde tout le terrain visible.</p>
+
+            <details class="rounded-lg bg-black/20 border border-white/15 px-4 py-3">
+                <summary class="text-sm font-semibold cursor-pointer">🎨 Personnalisation (vitesse, couleurs, son)</summary>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-semibold mb-2">Vitesse (rythme)</label>
+                    <div class="grid grid-cols-5 gap-2" id="speed-group">
+                        <button type="button" data-value="0.9" class="speed-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">×0,90</button>
+                        <button type="button" data-value="0.95" class="speed-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">×0,95</button>
+                        <button type="button" data-value="1.0" class="speed-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">Normal</button>
+                        <button type="button" data-value="1.05" class="speed-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">×1,05</button>
+                        <button type="button" data-value="1.1" class="speed-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">×1,10</button>
+                    </div>
+                    <input type="hidden" id="speed" value="1.0" />
+                </div>
+
+                <div class="mt-4">
+                    <label class="block text-sm font-semibold mb-2">Look couleur</label>
+                    <div class="grid grid-cols-5 gap-2" id="look-group">
+                        <button type="button" data-value="none" class="look-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">Aucun</button>
+                        <button type="button" data-value="vif" class="look-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">Vif</button>
+                        <button type="button" data-value="cinema" class="look-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">Ciné</button>
+                        <button type="button" data-value="chaud" class="look-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">Chaud</button>
+                        <button type="button" data-value="froid" class="look-opt rounded-lg border border-white/20 bg-black/30 py-2 text-xs font-semibold">Froid</button>
+                    </div>
+                    <input type="hidden" id="look" value="none" />
+                </div>
+
+                <label class="flex items-start gap-3 cursor-pointer mt-4">
+                    <input id="mute" type="checkbox" class="w-5 h-5 mt-0.5 accent-pink-500 shrink-0" />
+                    <span class="text-sm"><span class="font-semibold">Couper le son</span>
+                    <span class="block text-xs text-white/60 mt-0.5">Pour ajouter ta propre musique/voix au montage ensuite.</span></span>
+                </label>
+            </details>
+
             <button type="submit" id="submit-btn"
                     class="w-full rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 py-3 font-bold text-lg shadow-lg hover:from-pink-600 hover:to-rose-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
                 🚀 Générer la vidéo TikTok
@@ -161,6 +251,8 @@ const STATUS = {
     pending: 'En attente…',
     downloading: 'Téléchargement depuis YouTube…',
     transcribing: '🎙️ Transcription du commentaire (détection but/action)…',
+    detecting: '🐢 Analyse du mouvement (détection des ralentis)…',
+    reading_score: '🔢 Lecture du score (détection des buts)…',
     analyzing: '🎧 Repli sur analyse audio…',
     processing: 'Montage et conversion TikTok…',
     done: 'Terminé !',
@@ -186,9 +278,11 @@ function setupPillGroup(groupId, hiddenId, defaultValue, onChange) {
     set(defaultValue);
 }
 
+const cutSlowmoWrap = $('cut-slowmo-wrap');
 setupPillGroup('mode-group', 'mode', 'auto', (val) => {
     autoFields.classList.toggle('hidden', val !== 'auto');
     manualFields.classList.toggle('hidden', val !== 'manual');
+    cutSlowmoWrap.classList.toggle('hidden', val !== 'auto');
     if (val === 'manual') {
         manualFields.classList.remove('hidden');
         manualFields.classList.add('grid');
@@ -197,8 +291,19 @@ setupPillGroup('mode-group', 'mode', 'auto', (val) => {
         manualFields.classList.remove('grid');
     }
 });
+setupPillGroup('sport-group', 'sport', 'foot', (val) => {
+    $('nba-note').classList.toggle('hidden', val !== 'nba');
+    // le "Garder le score" et le choix de chaîne sont propres au foot → masqués en NBA
+    const sb = $('scoreboard'); if (sb) sb.closest('label').classList.toggle('hidden', val === 'nba');
+    $('channel-wrap').classList.toggle('hidden', val === 'nba');
+});
+setupPillGroup('channel-group', 'channel', 'auto');
 setupPillGroup('target-group', 'target_duration', '60');
-setupPillGroup('format-group', 'format', 'blur');
+setupPillGroup('format-group', 'format', 'blur', (val) => {
+    $('crop-note').classList.toggle('hidden', val !== 'crop');
+});
+setupPillGroup('speed-group', 'speed', '1.0');
+setupPillGroup('look-group', 'look', 'none');
 
 function showError(msg) {
     progressDiv.classList.add('hidden');
@@ -234,6 +339,13 @@ form.addEventListener('submit', async (e) => {
         start: $('start').value || 0,
         duration: $('duration').value || null,
         blur_logo: $('blur_logo').checked,
+        cut_slowmo: $('cut_slowmo').checked,
+        scoreboard: $('scoreboard').checked,
+        speed: parseFloat($('speed').value),
+        look: $('look').value,
+        mute: $('mute').checked,
+        sport: $('sport').value,
+        channel: $('channel').value,
     };
 
     try {
