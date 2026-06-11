@@ -1,6 +1,7 @@
 import array
 import os
 import re
+import sys
 import shutil
 import tempfile
 import subprocess
@@ -1370,27 +1371,51 @@ def process_video(job_id: str, url: str, options: dict) -> None:
             "progress_hooks": [hook],
         }
         # Cookies du navigateur → contourne l'anti-bot YouTube ("Sign in to confirm…")
-        browser = os.environ.get("COOKIES_BROWSER", "safari").strip().lower()
-        if browser and browser != "none":
-            ydl_opts["cookiesfrombrowser"] = (browser,)
-        try:
-            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        # Défaut adapté à l'OS : Safari (macOS uniquement), Edge (Windows), sinon Firefox.
+        default_browser = "safari" if sys.platform == "darwin" else (
+            "edge" if sys.platform == "win32" else "firefox"
+        )
+        browser = os.environ.get("COOKIES_BROWSER", default_browser).strip().lower()
+
+        def _download(use_cookies):
+            opts = dict(ydl_opts)
+            if use_cookies and browser and browser != "none":
+                opts["cookiesfrombrowser"] = (browser,)
+            with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=True)
-                title = info.get("title") or "video"
+                return info.get("title") or "video"
+
+        try:
+            title = _download(use_cookies=True)
         except Exception as e:
             msg = str(e)
-            if "could not" in msg.lower() and "cookies" in msg.lower():
-                raise RuntimeError(
-                    f"Lecture des cookies {browser} impossible. Autorise l'« Accès complet "
-                    f"au disque » pour le Terminal (Réglages Système → Confidentialité), "
-                    f"ou change de navigateur via COOKIES_BROWSER. Détail: {msg[:200]}"
-                )
-            if "sign in to confirm" in msg.lower() or "not a bot" in msg.lower():
+            # Toute erreur liée aux cookies (plateforme non supportée, base verrouillée/chiffrée,
+            # impossible à copier…) → on retente sans cookies plutôt que de planter.
+            cookie_problem = (
+                "unsupported platform" in msg.lower()
+                or "cookie" in msg.lower()
+            )
+            if cookie_problem:
+                # Lecture des cookies impossible (ex. Safari sur Windows) → on réessaie sans cookies.
+                try:
+                    title = _download(use_cookies=False)
+                except Exception as e2:
+                    msg2 = str(e2)
+                    if "sign in to confirm" in msg2.lower() or "not a bot" in msg2.lower():
+                        raise RuntimeError(
+                            "YouTube bloque (anti-bot) et les cookies du navigateur sont "
+                            f"illisibles sur ce système. Définis COOKIES_BROWSER sur un "
+                            f"navigateur installé (chrome, edge, firefox) où tu es connecté à "
+                            f"YouTube. Détail: {msg2[:160]}"
+                        )
+                    raise
+            elif "sign in to confirm" in msg.lower() or "not a bot" in msg.lower():
                 raise RuntimeError(
                     f"YouTube bloque (anti-bot) malgré les cookies {browser}. Ouvre la vidéo "
                     f"dans {browser} en étant connecté, puis réessaie. Détail: {msg[:160]}"
                 )
-            raise
+            else:
+                raise
 
         produced = next(DOWNLOADS_DIR.glob(f"{job_id}.*"), None)
         if produced is None or not produced.exists():
