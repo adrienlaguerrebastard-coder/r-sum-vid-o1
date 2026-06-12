@@ -228,6 +228,26 @@ NBA_EXC_KEYWORDS = [
     "incroyable", "enorme", "quelle action", "magnifique", "monstrueux", "enormissime",
 ]
 
+# --- TENNIS (Roland-Garros / ATP / WTA) : commentaire FR ---------------------
+# Pas de "but" : on marque sans cesse (modèle NBA). Temps forts = aces, coups gagnants,
+# balles de break/set/match, défenses et échanges spectaculaires. Pas d'OCR du score
+# (jeux/sets/points 0-15-30-40-AD, illisibles comme un total croissant).
+TENNIS_BIG_KEYWORDS = [  # moments décisifs / spectaculaires
+    "balle de match", "balle de set", "ace", "passing", "passing-shot", "smash",
+    "coup gagnant", "point gagnant", "quel point", "magnifique point", "point sublime",
+    "amortie gagnante", "contre-pied", "tweener", "entre les jambes", "balle de jeu",
+]
+TENNIS_MED_KEYWORDS = [  # bons coups / break
+    "balle de break", "le break", "debreak", "coup droit gagnant", "revers gagnant",
+    "volee gagnante", "service gagnant", "amortie", "lob", "winner", "accelere",
+    "enroule", "long de ligne", "croise gagnant",
+]
+TENNIS_DEF_KEYWORDS = [  # défense / échange spectaculaire
+    "quelle defense", "defense incroyable", "recupere", "releve", "court partout",
+    "magnifique echange", "quel echange", "echange de toute beaute", "remet la balle",
+    "ne lache rien", "glissade",
+]
+
 GOAL_KW_NORM = [_strip_accents(k) for k in GOAL_KEYWORDS]
 NBA_BIG_NORM = [_strip_accents(k) for k in NBA_BIG_KEYWORDS]
 NBA_THREE_NORM = [_strip_accents(k) for k in NBA_THREE_KEYWORDS]
@@ -243,6 +263,9 @@ RUGBY_KICK_NORM = [_strip_accents(k) for k in RUGBY_KICK_KEYWORDS]
 RUGBY_REDCARD_NORM = [_strip_accents(k) for k in RUGBY_REDCARD_KEYWORDS]
 RUGBY_CHANCE_NORM = [_strip_accents(k) for k in RUGBY_CHANCE_KEYWORDS]
 RUGBY_SAVE_NORM = [_strip_accents(k) for k in RUGBY_SAVE_KEYWORDS]
+TENNIS_BIG_NORM = [_strip_accents(k) for k in TENNIS_BIG_KEYWORDS]
+TENNIS_MED_NORM = [_strip_accents(k) for k in TENNIS_MED_KEYWORDS]
+TENNIS_DEF_NORM = [_strip_accents(k) for k in TENNIS_DEF_KEYWORDS]
 
 _whisper_model = None
 _whisper_lock = threading.Lock()
@@ -323,6 +346,24 @@ def classify_segment_rugby(text: str) -> tuple[str | None, float]:
         return "chance", ACTION_SCORE + excite + 1
     if excite:
         return "chance", excite
+    return None, 0.0
+
+
+def classify_segment_tennis(text: str) -> tuple[str | None, float]:
+    """Classifieur TENNIS : modèle NBA (pas de "but", on marque sans cesse).
+
+    Tout est une "occasion" notée par intensité ; la sélection garde les meilleurs moments
+    répartis sur le match. Pas d'OCR (score jeux/sets/points non monotone)."""
+    tn = " " + _strip_accents(text) + " "
+    exc = sum(EXCITEMENT_SCORE for kw in NBA_EXC_NORM if kw in tn)
+    if _has_kw(tn, TENNIS_BIG_NORM):
+        return "chance", 12 + exc        # ace / balle de match/set / passing / coup gagnant
+    if _has_kw(tn, TENNIS_MED_NORM):
+        return "chance", 9 + exc          # break / coup gagnant secondaire
+    if _has_kw(tn, TENNIS_DEF_NORM):
+        return "save", 7 + exc            # défense / échange spectaculaire
+    if exc:
+        return "chance", 4 + exc
     return None, 0.0
 
 
@@ -805,8 +846,8 @@ def build_clips_from_transcript(
     Clips triés chronologiquement pour préserver le récit."""
     regions = sorted(slowmo_regions or [])
     sorted_segs = sorted(segments, key=lambda s: s["start"])
-    classify = {"nba": classify_segment_nba, "rugby": classify_segment_rugby}.get(
-        sport, classify_segment)
+    classify = {"nba": classify_segment_nba, "rugby": classify_segment_rugby,
+                "tennis": classify_segment_tennis}.get(sport, classify_segment)
 
     # --- 1. Extraction typée des événements depuis le commentaire ---
     by_type: dict[str, list[dict]] = {
@@ -1603,6 +1644,8 @@ def process_video(job_id: str, url: str, options: dict) -> None:
                 )
                 if clips and sport == "nba":
                     detection = f"{len(clips)} temps forts (dunks, 3pts, contres, clutch…)"
+                elif clips and sport == "tennis":
+                    detection = f"{len(clips)} temps forts (aces, coups gagnants, échanges…)"
                 elif clips and sport == "rugby":
                     parts = [f"{counts['goal']} essai(s)"]
                     if counts["penalty"]:
@@ -1718,7 +1761,7 @@ def submit():
         "cut_slowmo": bool(data.get("cut_slowmo", True)),
         "scoreboard": bool(data.get("scoreboard", False)),
         "mute": bool(data.get("mute", False)),
-        "sport": data.get("sport") if data.get("sport") in ("foot", "nba", "rugby") else "foot",
+        "sport": data.get("sport") if data.get("sport") in ("foot", "nba", "rugby", "tennis") else "foot",
         "channel": data.get("channel") if data.get("channel") in (*SCOREBOARDS, "auto") else "auto",
     }
     try:

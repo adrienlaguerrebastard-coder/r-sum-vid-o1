@@ -31,7 +31,7 @@
 
             <div>
                 <label class="block text-sm font-semibold mb-2">Sport</label>
-                <div class="grid grid-cols-3 gap-2" id="sport-group">
+                <div class="grid grid-cols-2 gap-2" id="sport-group">
                     <button type="button" data-value="foot"
                             class="sport-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
                         ⚽ Foot
@@ -44,10 +44,15 @@
                             class="sport-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
                         🏉 Rugby
                     </button>
+                    <button type="button" data-value="tennis"
+                            class="sport-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        🎾 Tennis
+                    </button>
                 </div>
                 <input type="hidden" id="sport" value="foot" />
                 <p id="nba-note" class="hidden mt-2 text-xs text-pink-100/70">🏀 Mode basket : on garde les meilleurs temps forts (dunks, 3pts, contres, clutch) répartis sur le match. Pas de score OCR (on marque sans cesse) ; commentaire anglais géré.</p>
                 <p id="rugby-note" class="hidden mt-2 text-xs text-pink-100/70">🏉 Mode rugby : essais, pénalités, drops, percées et grattages repérés au commentaire (FR) + clameur + ralentis. Pas de score OCR (score à 2 chiffres).</p>
+                <p id="tennis-note" class="hidden mt-2 text-xs text-pink-100/70">🎾 Mode tennis : on garde les meilleurs temps forts (aces, coups gagnants, balles de break/set/match, échanges) répartis sur le match, via commentaire (FR) + clameur. Pas de score OCR.</p>
             </div>
 
             <div id="channel-wrap">
@@ -319,6 +324,7 @@ setupPillGroup('mode-group', 'mode', 'auto', (val) => {
 setupPillGroup('sport-group', 'sport', 'foot', (val) => {
     $('nba-note').classList.toggle('hidden', val !== 'nba');
     $('rugby-note').classList.toggle('hidden', val !== 'rugby');
+    $('tennis-note').classList.toggle('hidden', val !== 'tennis');
     // le "Garder le score" et le choix de chaîne sont propres au foot (OCR du score) →
     // masqués en NBA ET en rugby (pas d'OCR dans ces deux modes)
     const sb = $('scoreboard'); if (sb) sb.closest('label').classList.toggle('hidden', val !== 'foot');
