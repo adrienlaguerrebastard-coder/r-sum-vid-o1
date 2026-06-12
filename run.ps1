@@ -15,6 +15,22 @@ if (-not (Get-Command ffmpeg -ErrorAction SilentlyContinue)) {
     }
 }
 
+# Cherche tesseract (OCR du score) dans le PATH, sinon dans les emplacements d'install courants
+if (-not (Get-Command tesseract -ErrorAction SilentlyContinue)) {
+    $tessCandidates = @(
+        "$env:LOCALAPPDATA\Programs\Tesseract-OCR",
+        "$env:ProgramFiles\Tesseract-OCR",
+        "${env:ProgramFiles(x86)}\Tesseract-OCR"
+    )
+    $tessDir = $tessCandidates | Where-Object { Test-Path (Join-Path $_ "tesseract.exe") } | Select-Object -First 1
+    if ($tessDir) {
+        $env:PATH = "$tessDir;$env:PATH"
+        Write-Host "tesseract ajoute au PATH: $tessDir"
+    } else {
+        Write-Warning "tesseract introuvable : la lecture du score (buts par OCR) sera desactivee. Installe-le via: winget install UB-Mannheim.TesseractOCR"
+    }
+}
+
 # venv
 $python = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 if (-not (Test-Path $python)) {

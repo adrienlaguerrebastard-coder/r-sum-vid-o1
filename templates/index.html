@@ -31,7 +31,7 @@
 
             <div>
                 <label class="block text-sm font-semibold mb-2">Sport</label>
-                <div class="grid grid-cols-2 gap-2" id="sport-group">
+                <div class="grid grid-cols-3 gap-2" id="sport-group">
                     <button type="button" data-value="foot"
                             class="sport-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
                         ⚽ Foot
@@ -40,17 +40,42 @@
                             class="sport-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
                         🏀 NBA / Basket
                     </button>
+                    <button type="button" data-value="rugby"
+                            class="sport-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        🏉 Rugby
+                    </button>
                 </div>
                 <input type="hidden" id="sport" value="foot" />
                 <p id="nba-note" class="hidden mt-2 text-xs text-pink-100/70">🏀 Mode basket : on garde les meilleurs temps forts (dunks, 3pts, contres, clutch) répartis sur le match. Pas de score OCR (on marque sans cesse) ; commentaire anglais géré.</p>
+                <p id="rugby-note" class="hidden mt-2 text-xs text-pink-100/70">🏉 Mode rugby : essais, pénalités, drops, percées et grattages repérés au commentaire (FR) + clameur + ralentis. Pas de score OCR (score à 2 chiffres).</p>
             </div>
 
             <div id="channel-wrap">
                 <label class="block text-sm font-semibold mb-2">Chaîne (pour lire le score)</label>
-                <div class="grid grid-cols-3 gap-2" id="channel-group">
+                <div class="grid grid-cols-2 gap-2" id="channel-group">
                     <button type="button" data-value="auto"
                             class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
                         ✨ Auto
+                    </button>
+                    <button type="button" data-value="worldcup"
+                            class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        🏆 Coupe du Monde
+                    </button>
+                    <button type="button" data-value="ldc"
+                            class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        ⭐ Ligue des Champions
+                    </button>
+                    <button type="button" data-value="premierleague"
+                            class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        🦁 Premier League
+                    </button>
+                    <button type="button" data-value="ligue1"
+                            class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        🇫🇷 Ligue 1
+                    </button>
+                    <button type="button" data-value="liga"
+                            class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
+                        🇪🇸 Liga
                     </button>
                     <button type="button" data-value="tf1"
                             class="channel-opt rounded-lg border border-white/20 bg-black/30 py-3 text-sm font-semibold transition">
@@ -62,7 +87,7 @@
                     </button>
                 </div>
                 <input type="hidden" id="channel" value="auto" />
-                <p class="mt-2 text-xs text-white/50">✨ <b>Auto</b> détecte tout seul la position du bandeau (n'importe quel diffuseur). Choisis TF1/L'Équipe pour aller plus vite si tu connais la chaîne.</p>
+                <p class="mt-2 text-xs text-white/50">✨ <b>Auto</b> détecte tout seul la position du bandeau (n'importe quel diffuseur). Choisis <b>🏆 Coupe du Monde</b> (habillage FIFA, M6/TF1) ou TF1/L'Équipe pour aller plus vite et plus fiable si tu connais la chaîne.</p>
             </div>
 
             <div>
@@ -293,9 +318,11 @@ setupPillGroup('mode-group', 'mode', 'auto', (val) => {
 });
 setupPillGroup('sport-group', 'sport', 'foot', (val) => {
     $('nba-note').classList.toggle('hidden', val !== 'nba');
-    // le "Garder le score" et le choix de chaîne sont propres au foot → masqués en NBA
-    const sb = $('scoreboard'); if (sb) sb.closest('label').classList.toggle('hidden', val === 'nba');
-    $('channel-wrap').classList.toggle('hidden', val === 'nba');
+    $('rugby-note').classList.toggle('hidden', val !== 'rugby');
+    // le "Garder le score" et le choix de chaîne sont propres au foot (OCR du score) →
+    // masqués en NBA ET en rugby (pas d'OCR dans ces deux modes)
+    const sb = $('scoreboard'); if (sb) sb.closest('label').classList.toggle('hidden', val !== 'foot');
+    $('channel-wrap').classList.toggle('hidden', val !== 'foot');
 });
 setupPillGroup('channel-group', 'channel', 'auto');
 setupPillGroup('target-group', 'target_duration', '60');

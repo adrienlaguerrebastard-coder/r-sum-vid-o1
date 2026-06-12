@@ -118,6 +118,39 @@ SCOREBOARDS = {
         "home_x": 0.142, "away_x": 0.169, "digit_y": 0.086, "digit_h": 0.058, "digit_w": 0.024,
         "region_x": 0.0, "region_y": 0.03, "region_w": 0.40, "region_h": 0.10, "score_delay": 13,
     },
+    "worldcup": {  # Coupe du Monde 2026 (habillage FIFA, M6/TF1) : bandeau haut-gauche
+        # [horloge] [drapeau EQ1] [chiffre dom] [logo FIFA] [chiffre ext] [EQ2 drapeau]
+        # Les 2 chiffres sont SÉPARÉS par le logo FIFA (gros écart) — calé sur Mexique-AfSud.
+        "home_x": 0.200, "away_x": 0.244, "digit_y": 0.062, "digit_h": 0.055, "digit_w": 0.024,
+        "region_x": 0.02, "region_y": 0.055, "region_w": 0.34, "region_h": 0.085, "score_delay": 8,
+    },
+    "ldc": {  # Ligue des Champions (habillage CANAL+) : bandeau bleu compact haut-gauche
+        # [logo UCL] [horloge] [EQ1 chiffre dom] [chiffre ext EQ2] — chiffres PETITS et PROCHES
+        # (pas de logo entre les deux). Calé sur PSG-Arsenal (finale 2025/2026).
+        "home_x": 0.196, "away_x": 0.223, "digit_y": 0.055, "digit_h": 0.034, "digit_w": 0.020,
+        "region_x": 0.015, "region_y": 0.05, "region_w": 0.30, "region_h": 0.06, "score_delay": 8,
+    },
+    "premierleague": {  # Premier League (flux mondial PL) : bandeau haut-gauche, timer dessous
+        # [EQ1 rouge] [chiffre dom] [logo lion PL] [chiffre ext] [EQ2 gris] / [horloge dessous]
+        # Les 2 chiffres sont SÉPARÉS par le logo lion (large). Calé sur Bournemouth-Man City.
+        "home_x": 0.118, "away_x": 0.158, "digit_y": 0.050, "digit_h": 0.050, "digit_w": 0.018,
+        "region_x": 0.035, "region_y": 0.04, "region_w": 0.22, "region_h": 0.12, "score_delay": 8,
+    },
+    "liga": {  # La Liga (habillage beIN) : bandeau EMPILÉ (2 lignes) haut-gauche
+        # [logo LaLiga] [blason+RMA <dom>] / [horloge] [blason+ATM <ext>]. Scores NOIRS sur
+        # panneau BLANC, même colonne (home_x==away_x), lignes différentes. Calé sur Real-Atlético.
+        "home_x": 0.139, "away_x": 0.139, "digit_w": 0.016, "digit_h": 0.042,
+        "digit_y": 0.050, "home_y": 0.050, "away_y": 0.100,
+        "region_x": 0.03, "region_y": 0.04, "region_w": 0.14, "region_h": 0.11, "score_delay": 6,
+    },
+    "ligue1": {  # Ligue 1 (chaîne off. / habillage L1) : bandeau EMPILÉ (2 lignes) haut-gauche
+        # [logo 1] PSG  <chiffre dom>  /  SB29 <chiffre ext>  /  [horloge]. Les 2 scores sont
+        # à la MÊME colonne (home_x==away_x) mais à des LIGNES différentes (home_y/away_y).
+        # Calé sur PSG-Brest. Bandeau INTERMITTENT (pas affiché en continu).
+        "home_x": 0.154, "away_x": 0.154, "digit_w": 0.016, "digit_h": 0.024,
+        "digit_y": 0.064, "home_y": 0.064, "away_y": 0.106,
+        "region_x": 0.10, "region_y": 0.05, "region_w": 0.13, "region_h": 0.13, "score_delay": 8,
+    },
 }
 SCORE_OCR_STEP = 1.0       # secondes entre deux lectures du score
 SCORE_STABLE = 2           # un score doit apparaître ≥ ce nb de lectures pour être validé
@@ -140,6 +173,38 @@ MAX_PLAUSIBLE_GOALS = 12   # garde-fou : au-delà, l'OCR du score déraille → 
 def _strip_accents(text: str) -> str:
     return unicodedata.normalize("NFD", text).encode("ascii", "ignore").decode("ascii").lower()
 
+
+# --- RUGBY (TOP 14 / coupe du monde) : commentaire FR -----------------------
+# Scoring : essai (5) + transformation (2), pénalité (3), drop (3). Pas d'OCR du score
+# (2 chiffres + incréments variables) → on s'appuie sur le commentaire + clameur + ralentis.
+RUGBY_TRY_KEYWORDS = [  # ESSAI = évènement majeur (≈ but au foot)
+    "essai", "aplati", "aplatit", "aplatie", "aplatir", "pose le ballon",
+    "en-but", "dans l'en-but", "franchit la ligne", "derriere la ligne",
+    "va a l'essai", "file a l'essai", "part a l'essai", "double essai",
+    "triple essai", "essai en coin", "essai transforme", "try ",
+]
+RUGBY_KICK_KEYWORDS = [  # PÉNALITÉ / DROP / TRANSFORMATION = points au pied
+    "penalite", "drop", "coup de pied de penalite", "passe les perches",
+    "entre les perches", "entre les poteaux", "transformation", "transforme",
+    "tente la penalite", "passe la penalite", "reussit la penalite",
+    "face aux perches", "buteur",
+]
+RUGBY_REDCARD_KEYWORDS = [  # cartons (rouge = expulsion, jaune = 10 min)
+    "carton rouge", "carton jaune", "carton blanc", "rouge direct",
+    "expulsion", "expulse", "sanction disciplinaire", "carton",
+]
+RUGBY_CHANCE_KEYWORDS = [  # temps forts offensifs
+    "percee", "perce", "franchissement", "franchit", "cadrage debordement",
+    "cadrage-debordement", "offload", "raffut", "crochet", "echappee",
+    "contre-attaque", "contre attaque", "relance", "deborde", "chistera",
+    "sur l'aile", "coup de pied a suivre", "grand pont", "fixe et donne",
+    "petit cote", "evite le plaquage", "casse le plaquage",
+]
+RUGBY_SAVE_KEYWORDS = [  # temps forts défensifs (le plaquage SEUL est trop fréquent)
+    "grattage", "gratte le ballon", "ballon gratte", "turnover", "gratte",
+    "recupere le ballon", "plaquage decisif", "double plaquage",
+    "sauve l'essai", "sauvetage", "merci la defense", "plaquage offensif",
+]
 
 # --- NBA / basket : temps forts repérés au commentaire (EN + FR) -----------
 NBA_BIG_KEYWORDS = [  # gros moments
@@ -173,6 +238,11 @@ REDCARD_KW_NORM = [_strip_accents(k) for k in REDCARD_KEYWORDS]
 SAVE_KW_NORM = [_strip_accents(k) for k in SAVE_KEYWORDS]
 CHANCE_KW_NORM = [_strip_accents(k) for k in CHANCE_KEYWORDS]
 EXCITEMENT_KW_NORM = [_strip_accents(k) for k in EXCITEMENT_KEYWORDS]
+RUGBY_TRY_NORM = [_strip_accents(k) for k in RUGBY_TRY_KEYWORDS]
+RUGBY_KICK_NORM = [_strip_accents(k) for k in RUGBY_KICK_KEYWORDS]
+RUGBY_REDCARD_NORM = [_strip_accents(k) for k in RUGBY_REDCARD_KEYWORDS]
+RUGBY_CHANCE_NORM = [_strip_accents(k) for k in RUGBY_CHANCE_KEYWORDS]
+RUGBY_SAVE_NORM = [_strip_accents(k) for k in RUGBY_SAVE_KEYWORDS]
 
 _whisper_model = None
 _whisper_lock = threading.Lock()
@@ -231,6 +301,28 @@ def classify_segment_nba(text: str) -> tuple[str | None, float]:
         return "save", 7 + exc            # contre / interception
     if exc:
         return "chance", 4 + exc          # gros pic d'enthousiasme seul
+    return None, 0.0
+
+
+def classify_segment_rugby(text: str) -> tuple[str | None, float]:
+    """Classifieur RUGBY : mêmes priorités qu'au foot mais vocabulaire rugby.
+
+    ESSAI (≈ but) et PÉNALITÉ/DROP sont OBLIGATOIRES (vrais points). Percées et actions
+    défensives (grattage/turnover) deviennent des occasions. Pas d'OCR (score à 2 chiffres)."""
+    tn = " " + _strip_accents(text) + " "
+    excite = sum(EXCITEMENT_SCORE for kw in EXCITEMENT_KW_NORM if kw in tn)
+    if _has_kw(tn, RUGBY_TRY_NORM):
+        return "goal", GOAL_SCORE + excite
+    if _has_kw(tn, RUGBY_REDCARD_NORM):
+        return "redcard", GOAL_SCORE + excite
+    if _has_kw(tn, RUGBY_KICK_NORM):
+        return "penalty", GOAL_SCORE + excite
+    if _has_kw(tn, RUGBY_SAVE_NORM):
+        return "save", ACTION_SCORE + excite + 2
+    if _has_kw(tn, RUGBY_CHANCE_NORM):
+        return "chance", ACTION_SCORE + excite + 1
+    if excite:
+        return "chance", excite
     return None, 0.0
 
 
@@ -446,12 +538,17 @@ def _dedupe_times(times: list[float], gap: float) -> list[float]:
 
 
 def _ocr_digit_sequence(video: Path, x: float, prof: dict, step: float, tmp: Path, tag: str,
-                        polarities=(("neg", ",negate"), ("pos", ""))) -> list[int | None]:
+                        polarities=(("neg", ",negate"), ("pos", "")),
+                        y: float | None = None) -> list[int | None]:
     """OCR d'un seul chiffre (domicile ou extérieur) toutes les `step` s. Par défaut teste
     les DEUX polarités (chiffre clair sur fond foncé ET foncé sur clair) ; passer
-    `polarities=(("neg",",negate"),)` pour aller plus vite (probe). 0-9 ou None par échantillon."""
+    `polarities=(("neg",",negate"),)` pour aller plus vite (probe). 0-9 ou None par échantillon.
+
+    `y` permet un Y propre à ce chiffre (bandeaux EMPILÉS comme la Ligue 1 où les 2 scores
+    sont à la même colonne mais à des lignes différentes) ; défaut = prof['digit_y']."""
+    yy = prof["digit_y"] if y is None else y
     crop = (f"fps=1/{step},crop=iw*{prof['digit_w']}:ih*{prof['digit_h']}:"
-            f"iw*{x}:ih*{prof['digit_y']},scale=iw*10:ih*10:flags=lanczos,"
+            f"iw*{x}:ih*{yy},scale=iw*10:ih*10:flags=lanczos,"
             f"format=gray,eq=contrast=1.6")
     out: dict[str, list[int | None]] = {}
     for pol, suffix in polarities:
@@ -466,7 +563,9 @@ def _ocr_digit_sequence(video: Path, x: float, prof: dict, step: float, tmp: Pat
             continue
         lf = d / "list.txt"
         lf.write_text("\n".join(str(f) for f in files))
-        r = subprocess.run(["tesseract", str(lf), "stdout", "--psm", "10",
+        # psm 8 (single word) > psm 10 (single char) : plus robuste quand le chiffre est petit
+        # avec de la marge (ex. bandeau CANAL+/LdC où psm 10 ne lit rien). len==1 filtre le bruit.
+        r = subprocess.run(["tesseract", str(lf), "stdout", "--psm", "8",
                             "-c", "tessedit_char_whitelist=0123456789"],
                            capture_output=True, text=True, timeout=600)
         vals: list[int | None] = []
@@ -517,7 +616,7 @@ def auto_detect_scoreboard(video: Path, duration: float) -> dict:
         if not files:
             return []
         lf = d / "l.txt"; lf.write_text("\n".join(str(f) for f in files))
-        r = subprocess.run(["tesseract", str(lf), "stdout", "--psm", "10",
+        r = subprocess.run(["tesseract", str(lf), "stdout", "--psm", "8",
                             "-c", "tessedit_char_whitelist=0123456789"],
                            capture_output=True, text=True, timeout=300)
         return [int(s.strip()) if (len(s.strip()) == 1 and s.strip().isdigit()) else None
@@ -565,12 +664,19 @@ def detect_score_changes(video: Path, duration: float, channel: str = "tf1") -> 
             else SCOREBOARDS.get(channel, SCOREBOARDS["tf1"]))
     tmp = Path(tempfile.mkdtemp(prefix="score_"))
     try:
-        home = _ocr_digit_sequence(video, prof["home_x"], prof, SCORE_OCR_STEP, tmp, "h")
-        away = _ocr_digit_sequence(video, prof["away_x"], prof, SCORE_OCR_STEP, tmp, "a")
+        # bandeaux EMPILÉS (Ligue 1) : home_y/away_y séparés ; sinon les deux partagent digit_y
+        home = _ocr_digit_sequence(video, prof["home_x"], prof, SCORE_OCR_STEP, tmp, "h",
+                                   y=prof.get("home_y"))
+        away = _ocr_digit_sequence(video, prof["away_x"], prof, SCORE_OCR_STEP, tmp, "a",
+                                   y=prof.get("away_y"))
         n = min(len(home), len(away))
-        # lectures (temps, total) quand les DEUX chiffres sont lus
+        # lectures (temps, total) quand les DEUX chiffres sont lus. On rejette les totaux
+        # IMPLAUSIBLES (> 9) : un score de foot affiché à 10+ (ex. « 7-7 » lu sur une frame
+        # SANS bandeau) est forcément du bruit OCR. Sinon il peut initialiser le score de
+        # départ trop haut et masquer tous les vrais buts (cas Premier League : 7-7 à t=0).
         reads = [(i * SCORE_OCR_STEP, home[i] + away[i])
-                 for i in range(n) if home[i] is not None and away[i] is not None]
+                 for i in range(n)
+                 if home[i] is not None and away[i] is not None and home[i] + away[i] <= 9]
         if not reads:
             return []
         # un total n'est "stable" que s'il se répète sur SCORE_STABLE lectures proches
@@ -699,7 +805,8 @@ def build_clips_from_transcript(
     Clips triés chronologiquement pour préserver le récit."""
     regions = sorted(slowmo_regions or [])
     sorted_segs = sorted(segments, key=lambda s: s["start"])
-    classify = classify_segment_nba if sport == "nba" else classify_segment
+    classify = {"nba": classify_segment_nba, "rugby": classify_segment_rugby}.get(
+        sport, classify_segment)
 
     # --- 1. Extraction typée des événements depuis le commentaire ---
     by_type: dict[str, list[dict]] = {
@@ -1463,10 +1570,12 @@ def process_video(job_id: str, url: str, options: dict) -> None:
             # Pics audio = source d'"occasions" (et filet pour buts ratés par le texte)
             rms = extract_audio_rms(download_path)
 
-            # OCR du score : utile seulement au FOOT (buts rares). En NBA on marque sans
-            # cesse → inutile pour sélectionner ; on s'appuie sur l'audio + mots-clés.
+            # OCR du score : utile seulement au FOOT (buts rares, score à 1 chiffre par équipe).
+            # NBA : on marque sans cesse. RUGBY : score à 2 chiffres + incréments variables
+            # (+3/+5/+7) → modèle OCR mono-chiffre inadapté. Dans ces 2 cas on s'appuie sur
+            # l'audio + les mots-clés du commentaire.
             ocr_goals = []
-            if sport != "nba" and duration > 0:
+            if sport == "foot" and duration > 0:
                 update_job(job_id, status="reading_score", progress=49)
                 # instants de TRANSITION du score (l'action est avant ; le clip englobe les
                 # deux : on remonte large ET on finit après la transition → capte les buts
@@ -1494,6 +1603,17 @@ def process_video(job_id: str, url: str, options: dict) -> None:
                 )
                 if clips and sport == "nba":
                     detection = f"{len(clips)} temps forts (dunks, 3pts, contres, clutch…)"
+                elif clips and sport == "rugby":
+                    parts = [f"{counts['goal']} essai(s)"]
+                    if counts["penalty"]:
+                        parts.append(f"{counts['penalty']} pénalité(s)/drop")
+                    if counts["redcard"]:
+                        parts.append(f"{counts['redcard']} carton(s)")
+                    if counts["save"]:
+                        parts.append(f"{counts['save']} action(s) défensive(s)")
+                    if counts["chance"] + counts["audio"]:
+                        parts.append(f"{counts['chance'] + counts['audio']} temps fort(s)")
+                    detection = f"{len(clips)} clips — " + ", ".join(parts)
                 elif clips:
                     parts = [f"{counts['goal']} but(s)"]
                     if counts["penalty"]:
@@ -1598,7 +1718,7 @@ def submit():
         "cut_slowmo": bool(data.get("cut_slowmo", True)),
         "scoreboard": bool(data.get("scoreboard", False)),
         "mute": bool(data.get("mute", False)),
-        "sport": data.get("sport") if data.get("sport") in ("foot", "nba") else "foot",
+        "sport": data.get("sport") if data.get("sport") in ("foot", "nba", "rugby") else "foot",
         "channel": data.get("channel") if data.get("channel") in (*SCOREBOARDS, "auto") else "auto",
     }
     try:
