@@ -1524,11 +1524,17 @@ def process_video(job_id: str, url: str, options: dict) -> None:
             "edge" if sys.platform == "win32" else "firefox"
         )
         browser = os.environ.get("COOKIES_BROWSER", default_browser).strip().lower()
+        # Sur un serveur (cloud) il n'y a pas de navigateur : on passe un fichier cookies.txt
+        # via YTDLP_COOKIES (format Netscape, exporté depuis ton navigateur connecté).
+        cookie_file = os.environ.get("YTDLP_COOKIES", "").strip()
 
         def _download(use_cookies):
             opts = dict(ydl_opts)
-            if use_cookies and browser and browser != "none":
-                opts["cookiesfrombrowser"] = (browser,)
+            if use_cookies:
+                if cookie_file and os.path.exists(cookie_file):
+                    opts["cookiefile"] = cookie_file
+                elif browser and browser != "none":
+                    opts["cookiesfrombrowser"] = (browser,)
             with yt_dlp.YoutubeDL(opts) as ydl:
                 info = ydl.extract_info(url, download=True)
                 return info.get("title") or "video"

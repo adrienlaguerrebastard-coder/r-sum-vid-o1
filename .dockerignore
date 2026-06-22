@@ -1,0 +1,9 @@
+.venv
+__pycache__
+*.pyc
+downloads/*
+outputs/*
+.git
+.gitignore
+*.md
+run.ps1
